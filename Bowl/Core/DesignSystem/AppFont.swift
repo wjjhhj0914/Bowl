@@ -21,4 +21,19 @@ enum AppFont {
 
     /// Primary button label. Figma: SF Pro Bold 17.
     static let buttonTitle = UIFont.systemFont(ofSize: 17, weight: .bold)
+
+    /// Navigation-bar title. Figma: SF Pro Bold 17.
+    static let navTitle = UIFont.systemFont(ofSize: 17, weight: .bold)
+
+    /// Step indicator ("1 / 4"). Figma: SF Pro Bold 13.
+    static let stepIndicator = UIFont.systemFont(ofSize: 13, weight: .bold)
+
+    /// Field / section label. Figma: SF Pro Medium 14.
+    static let fieldLabel = UIFont.systemFont(ofSize: 14, weight: .medium)
+
+    /// Text-field input & placeholder. Figma: SF Pro Regular 14.
+    static let input = UIFont.systemFont(ofSize: 14, weight: .regular)
+
+    /// Helper / validation-rule caption. Figma: SF Pro Medium 11.
+    static let helper = UIFont.systemFont(ofSize: 11, weight: .medium)
 }

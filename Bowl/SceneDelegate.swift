@@ -17,12 +17,22 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     guard let windowScene = (scene as? UIWindowScene) else { return }
 
     let window = UIWindow(windowScene: windowScene)
+
+    // The app uses custom in-screen navigation bars, so the system bar is hidden.
     let onboardingViewController = OnboardingViewController(viewModel: OnboardingViewModel())
-    onboardingViewController.onFinishOnboarding = {
-      // TODO: Route to the profile-registration flow (Step 2).
-      print("Onboarding finished → navigate to profile flow")
+    let navigationController = UINavigationController(rootViewController: onboardingViewController)
+    navigationController.setNavigationBarHidden(true, animated: false)
+
+    onboardingViewController.onFinishOnboarding = { [weak navigationController] in
+      let step1 = ProfilePhotoNameViewController(viewModel: ProfilePhotoNameViewModel())
+      step1.onCompleteStep = { draft in
+        // TODO: Route to profile step 2 (묘종 & 생일), carrying `draft`.
+        print("Profile step 1 complete → name: \(draft.name), hasPhoto: \(draft.photo != nil)")
+      }
+      navigationController?.pushViewController(step1, animated: true)
     }
-    window.rootViewController = onboardingViewController
+
+    window.rootViewController = navigationController
     window.makeKeyAndVisible()
     self.window = window
   }
