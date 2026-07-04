@@ -58,6 +58,30 @@ enum AppColor {
     /// Placeholder backdrop for the profile photo circle. Figma: `#DCE6FB`
     static let photoPlaceholderBackground = UIColor(hex: "#DCE6FB")
 
-    /// Primary color in a disabled state (dimmed blue).
-    static let primaryDisabled = UIColor(hex: "#A9C7FB")
+    /// Disabled primary-button background. Figma: `#E0E2E6`
+    static let buttonDisabledBackground = UIColor(hex: "#E0E2E6")
+
+    /// Disabled primary-button title. Figma: `#999CA1`
+    static let buttonDisabledText = UIColor(hex: "#999CA1")
+
+    /// Background of the age-info chip on the birthday card. Figma: `#E0EFFF`
+    static let ageChipBackground = UIColor(hex: "#E0EFFF")
+
+    /// Text color inside the age-info chip. Figma: `#1E40AF`
+    static let ageChipText = UIColor(hex: "#1E40AF")
+
+    /// Search-field background in bottom sheets. Figma: `#F1F2F4`
+    static let searchFieldBackground = UIColor(hex: "#F1F2F4")
+
+    /// Highlighted row band in the date picker. Figma: `#EFF1F6`
+    static let pickerSelectionBackground = UIColor(hex: "#EFF1F6")
+
+    /// Pale-blue circle behind the selection checkmark. Figma: `#E6EEFC`
+    static let checkBadgeBackground = UIColor(hex: "#E6EEFC")
+
+    /// Bottom-sheet grabber handle. Figma: `#CCCCD4`
+    static let sheetGrabber = UIColor(hex: "#CCCCD4")
+
+    /// Bottom-sheet dimmed backdrop (used at 40% alpha).
+    static let dimmingBackground = UIColor.black
 }

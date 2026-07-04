@@ -19,6 +19,7 @@ final class PrimaryButton: UIButton {
         super.init(frame: .zero)
         setTitle(title, for: .normal)
         setTitleColor(AppColor.onPrimary, for: .normal)
+        setTitleColor(AppColor.buttonDisabledText, for: .disabled)
         titleLabel?.font = AppFont.buttonTitle
         layer.cornerRadius = 14
         updateBackground()
@@ -28,6 +29,6 @@ final class PrimaryButton: UIButton {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     private func updateBackground() {
-        backgroundColor = isEnabled ? AppColor.primary : AppColor.primaryDisabled
+        backgroundColor = isEnabled ? AppColor.primary : AppColor.buttonDisabledBackground
     }
 }

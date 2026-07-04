@@ -25,9 +25,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     onboardingViewController.onFinishOnboarding = { [weak navigationController] in
       let step1 = ProfilePhotoNameViewController(viewModel: ProfilePhotoNameViewModel())
-      step1.onCompleteStep = { draft in
-        // TODO: Route to profile step 2 (묘종 & 생일), carrying `draft`.
-        print("Profile step 1 complete → name: \(draft.name), hasPhoto: \(draft.photo != nil)")
+      step1.onCompleteStep = { [weak navigationController] draft in
+        let step2 = ProfileBreedBirthdayViewController(
+          viewModel: ProfileBreedBirthdayViewModel(draft: draft)
+        )
+        step2.onCompleteStep = { updatedDraft in
+          // TODO: Route to profile step 3 (성별 & 몸무게 & 체형), carrying `updatedDraft`.
+          print("Profile step 2 complete → breed: \(updatedDraft.breed ?? "-"), birthday: \(String(describing: updatedDraft.birthday))")
+        }
+        navigationController?.pushViewController(step2, animated: true)
       }
       navigationController?.pushViewController(step1, animated: true)
     }
