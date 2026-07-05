@@ -43,6 +43,7 @@ final class ProfilePhotoNameViewModel: ViewModelType {
         let name = input.name
             .map { $0.trimmingCharacters(in: .whitespaces) }
             .startWith("")
+            .share(replay: 1)
 
         // Photo is set by picking an image and cleared by the delete action.
         let photo = Observable
@@ -53,12 +54,16 @@ final class ProfilePhotoNameViewModel: ViewModelType {
             .startWith(nil)
             .share(replay: 1)
 
+        // The button reacts immediately, so it activates the instant the name
+        // becomes valid (no debounce here).
         let isNextEnabled = name
             .map { Self.isValidName($0) }
             .distinctUntilChanged()
 
-        // Show the rule only when there is input that fails validation.
+        // The error rule is debounced so intermediate Korean composition states
+        // (e.g. "ㄱ", "감ㅌ" while typing "감태") don't flicker it on and off.
         let showNameError = name
+            .debounce(.milliseconds(300), scheduler: MainScheduler.instance)
             .map { !$0.isEmpty && !Self.isValidName($0) }
             .distinctUntilChanged()
 
