@@ -81,4 +81,7 @@ enum AppFont {
 
     /// Small bold caption (slider bounds, inline links). Figma: SF Pro Bold 12.
     static let caption = UIFont.systemFont(ofSize: 12, weight: .bold)
+
+    /// Larger option-card title (e.g. 활동량 options). Figma: SF Pro Bold 14.
+    static let optionTitleLarge = UIFont.systemFont(ofSize: 14, weight: .bold)
 }

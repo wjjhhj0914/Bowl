@@ -61,6 +61,8 @@ final class StepProgressNavigationBar: UIView {
         super.init(frame: .zero)
         titleLabel.text = title
         stepLabel.text = "\(currentStep) / \(totalSteps)"
+        // Highlight the step counter blue on the final step.
+        stepLabel.textColor = currentStep == totalSteps ? AppColor.primary : AppColor.textTertiary
         backgroundColor = AppColor.surface
         setupHierarchy()
         setupLayout(fraction: CGFloat(currentStep) / CGFloat(totalSteps))

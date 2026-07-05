@@ -22,13 +22,21 @@ struct CatProfileDraft {
     var weight: Double?
     var bodyType: CatBodyType?
 
+    // Step 4 — 활동량 & 건강 & 알러지:
+    var activityLevel: CatActivityLevel?
+    var healthConcerns: Set<String>
+    var hasAllergy: Bool
+
     init(photo: UIImage? = nil,
          name: String = "",
          breed: String? = nil,
          birthday: Date? = nil,
          gender: CatGender? = nil,
          weight: Double? = nil,
-         bodyType: CatBodyType? = nil) {
+         bodyType: CatBodyType? = nil,
+         activityLevel: CatActivityLevel? = nil,
+         healthConcerns: Set<String> = [],
+         hasAllergy: Bool = false) {
         self.photo = photo
         self.name = name
         self.breed = breed
@@ -36,5 +44,8 @@ struct CatProfileDraft {
         self.gender = gender
         self.weight = weight
         self.bodyType = bodyType
+        self.activityLevel = activityLevel
+        self.healthConcerns = healthConcerns
+        self.hasAllergy = hasAllergy
     }
 }

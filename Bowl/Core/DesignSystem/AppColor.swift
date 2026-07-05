@@ -87,4 +87,10 @@ enum AppColor {
 
     /// Subtitle text on a selected (blue) body-type card. Figma: `#CCE5FF`
     static let onPrimarySubtext = UIColor(hex: "#CCE5FF")
+
+    /// Selected multi-select chip background (soft blue). Figma: `#EAF1FE`
+    static let chipSelectedBackground = UIColor(hex: "#EAF1FE")
+
+    /// "선택사항" optional badge background. Figma: `#EAEAEF`
+    static let badgeBackground = UIColor(hex: "#EAEAEF")
 }
