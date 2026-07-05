@@ -63,4 +63,22 @@ enum AppFont {
 
     /// Age-info descriptive text. Figma: SF Pro Bold 13.
     static let chipText = UIFont.systemFont(ofSize: 13, weight: .bold)
+
+    /// Emphasized numeric value (e.g. weight "4.5 kg"). Figma: SF Pro Black 18.
+    static let valueEmphasis = UIFont.systemFont(ofSize: 18, weight: .black)
+
+    /// Segmented-control option label (e.g. 암컷/수컷). Figma: SF Pro Bold 16.
+    static let segmentTitle = UIFont.systemFont(ofSize: 16, weight: .bold)
+
+    /// Option-card title (e.g. 체형 options). Figma: SF Pro Bold 13.
+    static let optionTitle = UIFont.systemFont(ofSize: 13, weight: .bold)
+
+    /// Option-card subtitle. Figma: SF Pro Medium 10.
+    static let optionSubtitle = UIFont.systemFont(ofSize: 10, weight: .medium)
+
+    /// Card body subtitle. Figma: SF Pro Medium 13.
+    static let cardSubtitle = UIFont.systemFont(ofSize: 13, weight: .medium)
+
+    /// Small bold caption (slider bounds, inline links). Figma: SF Pro Bold 12.
+    static let caption = UIFont.systemFont(ofSize: 12, weight: .bold)
 }

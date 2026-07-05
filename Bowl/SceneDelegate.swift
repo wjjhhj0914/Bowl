@@ -29,9 +29,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let step2 = ProfileBreedBirthdayViewController(
           viewModel: ProfileBreedBirthdayViewModel(draft: draft)
         )
-        step2.onCompleteStep = { updatedDraft in
-          // TODO: Route to profile step 3 (성별 & 몸무게 & 체형), carrying `updatedDraft`.
-          print("Profile step 2 complete → breed: \(updatedDraft.breed ?? "-"), birthday: \(String(describing: updatedDraft.birthday))")
+        step2.onCompleteStep = { [weak navigationController] draft2 in
+          let step3 = ProfileGenderWeightViewController(
+            viewModel: ProfileGenderWeightViewModel(draft: draft2)
+          )
+          step3.onCompleteStep = { draft3 in
+            // TODO: Route to profile step 4 (활동량 & 건강 & 알러지), carrying `draft3`.
+            print("Profile step 3 complete → gender: \(String(describing: draft3.gender)), weight: \(String(describing: draft3.weight)), body: \(String(describing: draft3.bodyType))")
+          }
+          navigationController?.pushViewController(step3, animated: true)
         }
         navigationController?.pushViewController(step2, animated: true)
       }

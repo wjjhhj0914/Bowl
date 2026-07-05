@@ -17,18 +17,24 @@ struct CatProfileDraft {
     var breed: String?
     var birthday: Date?
 
-    // Populated by later steps:
-    // var gender: Gender?
-    // var weight: Double?
-    // ...
+    // Step 3 — 성별 & 몸무게 & 체형:
+    var gender: CatGender?
+    var weight: Double?
+    var bodyType: CatBodyType?
 
     init(photo: UIImage? = nil,
          name: String = "",
          breed: String? = nil,
-         birthday: Date? = nil) {
+         birthday: Date? = nil,
+         gender: CatGender? = nil,
+         weight: Double? = nil,
+         bodyType: CatBodyType? = nil) {
         self.photo = photo
         self.name = name
         self.breed = breed
         self.birthday = birthday
+        self.gender = gender
+        self.weight = weight
+        self.bodyType = bodyType
     }
 }

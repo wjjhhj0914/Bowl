@@ -84,4 +84,7 @@ enum AppColor {
 
     /// Bottom-sheet dimmed backdrop (used at 40% alpha).
     static let dimmingBackground = UIColor.black
+
+    /// Subtitle text on a selected (blue) body-type card. Figma: `#CCE5FF`
+    static let onPrimarySubtext = UIColor(hex: "#CCE5FF")
 }
