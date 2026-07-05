@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum CatActivityLevel: CaseIterable {
+enum CatActivityLevel: String, CaseIterable, Codable {
     case low
     case medium
     case high

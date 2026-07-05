@@ -21,6 +21,8 @@ final class HomeViewController: BaseViewController {
     /// Routes header / quick-action taps to the coordinator.
     var onRoute: ((HomeRoute) -> Void)?
 
+    private let profileTapRelay = PublishRelay<Void>()
+
     // MARK: - UI
 
     private let headerView = HomeHeaderView()
@@ -57,6 +59,20 @@ final class HomeViewController: BaseViewController {
         view.addSubview(headerView)
         scrollView.addSubview(contentView)
         [profileCard, foodSectionTitle, foodCard, quickSectionTitle, quickActionGrid()].forEach { contentView.addSubview($0) }
+
+        // Tapping the profile card opens profile editing.
+        profileCard.isUserInteractionEnabled = true
+        profileCard.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(didTapProfileCard)))
+    }
+
+    @objc private func didTapProfileCard() {
+        profileTapRelay.accept(())
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Home uses its own custom header, so keep the system nav bar hidden.
+        navigationController?.setNavigationBarHidden(true, animated: animated)
     }
 
     private lazy var grid: UIStackView = {
@@ -126,6 +142,7 @@ final class HomeViewController: BaseViewController {
 
         let input = HomeViewModel.Input(
             settingsTapped: headerView.settingsButton.rx.tap.asObservable(),
+            profileTapped: profileTapRelay.asObservable(),
             foodDetailTapped: foodCard.detailButton.rx.tap.asObservable(),
             quickActionTapped: quickActionTapped
         )
@@ -150,7 +167,13 @@ final class HomeViewController: BaseViewController {
 
         output.route
             .drive(with: self) { owner, route in
-                owner.onRoute?(route)
+                switch route {
+                case .editProfile:
+                    // Home is embedded in a navigation controller — push cleanly.
+                    owner.navigationController?.pushViewController(ProfileEditViewController(), animated: true)
+                default:
+                    owner.onRoute?(route)
+                }
             }
             .disposed(by: disposeBag)
     }

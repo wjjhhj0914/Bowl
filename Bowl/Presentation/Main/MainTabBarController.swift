@@ -10,16 +10,6 @@ import UIKit
 
 final class MainTabBarController: UITabBarController {
 
-    private let profile: CatProfileDraft
-
-    init(profile: CatProfileDraft) {
-        self.profile = profile
-        super.init(nibName: nil, bundle: nil)
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-
     override func viewDidLoad() {
         super.viewDidLoad()
         configureAppearance()
@@ -27,14 +17,18 @@ final class MainTabBarController: UITabBarController {
     }
 
     private func configureTabs() {
-        let home = HomeViewController(viewModel: HomeViewModel(profile: profile))
+        // Home reads the saved profile from storage.
+        let home = HomeViewController(viewModel: HomeViewModel())
         home.onRoute = { route in
             // TODO: Route to search / scan / compare / record / settings.
             print("Home route → \(route)")
         }
+        // Embedded in a navigation controller so it can push profile editing.
+        let homeNav = UINavigationController(rootViewController: home)
+        homeNav.setNavigationBarHidden(true, animated: false)
 
         viewControllers = [
-            tab(home, title: "홈", symbol: "house.fill"),
+            tab(homeNav, title: "홈", symbol: "house.fill"),
             tab(PlaceholderViewController(name: "검색"), title: "검색", symbol: "magnifyingglass"),
             tab(PlaceholderViewController(name: "스캔"), title: "스캔", symbol: "barcode.viewfinder"),
             tab(PlaceholderViewController(name: "기록"), title: "기록", symbol: "list.bullet.clipboard.fill"),

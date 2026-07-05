@@ -7,7 +7,7 @@
 
 import Foundation
 
-enum CatBodyType: CaseIterable {
+enum CatBodyType: String, CaseIterable, Codable {
     case slim
     case normal
     case chubby

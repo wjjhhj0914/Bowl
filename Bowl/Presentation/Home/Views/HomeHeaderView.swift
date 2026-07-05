@@ -22,7 +22,8 @@ final class HomeHeaderView: UIView {
     let settingsButton: UIButton = {
         let button = UIButton(type: .system)
         let config = UIImage.SymbolConfiguration(pointSize: 22, weight: .regular)
-        button.setImage(UIImage(systemName: "gearshape.fill", withConfiguration: config), for: .normal)
+        button.setImage(UIImage(systemName: "gearshape", withConfiguration: config), for: .normal)
+        // Matches the header title color (navigation theme).
         button.tintColor = AppColor.textPrimary
         return button
     }()

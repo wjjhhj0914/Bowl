@@ -25,6 +25,7 @@ struct HomeDisplay {
 enum HomeRoute {
     case settings
     case foodDetail
+    case editProfile
     case quickAction(HomeQuickAction)
 }
 
@@ -32,6 +33,7 @@ final class HomeViewModel: ViewModelType {
 
     struct Input {
         let settingsTapped: Observable<Void>
+        let profileTapped: Observable<Void>
         let foodDetailTapped: Observable<Void>
         let quickActionTapped: Observable<HomeQuickAction>
     }
@@ -41,10 +43,10 @@ final class HomeViewModel: ViewModelType {
         let route: Driver<HomeRoute>
     }
 
-    private let profile: CatProfileDraft
+    private let storage: ProfileStoring
 
-    init(profile: CatProfileDraft) {
-        self.profile = profile
+    init(storage: ProfileStoring = UserDefaultsProfileStorage.shared) {
+        self.storage = storage
     }
 
     func transform(input: Input) -> Output {
@@ -53,6 +55,7 @@ final class HomeViewModel: ViewModelType {
         let route = Observable
             .merge(
                 input.settingsTapped.map { HomeRoute.settings },
+                input.profileTapped.map { HomeRoute.editProfile },
                 input.foodDetailTapped.map { HomeRoute.foodDetail },
                 input.quickActionTapped.map { HomeRoute.quickAction($0) }
             )
@@ -64,9 +67,12 @@ final class HomeViewModel: ViewModelType {
     // MARK: - Derivation
 
     private func makeDisplay() -> HomeDisplay {
-        let weight = profile.weight ?? 4.5
-        let stage = profile.birthday.map { CatAgeInfo(birthday: $0).stage } ?? "성묘"
-        let name = profile.name.isEmpty ? "우리 아이" : profile.name
+        // Fetch the profile saved during onboarding/registration.
+        let profile = storage.load()
+
+        let weight = profile?.weight ?? 4.5
+        let stage = profile?.birthday.map { CatAgeInfo(birthday: $0).stage } ?? "성묘"
+        let name = (profile?.name).flatMap { $0.isEmpty ? nil : $0 } ?? "우리 아이"
 
         return HomeDisplay(
             name: name,

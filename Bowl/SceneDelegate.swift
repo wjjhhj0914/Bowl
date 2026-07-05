@@ -38,10 +38,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
               viewModel: ProfileActivityHealthViewModel(draft: draft3)
             )
             step4.onComplete = { [weak window] finalDraft in
-              // Profile registration finished → enter the main app (home dashboard).
+              // Persist the profile, then enter the main app (home dashboard).
               guard let window else { return }
-              let mainTab = MainTabBarController(profile: finalDraft)
-              window.rootViewController = mainTab
+              UserDefaultsProfileStorage.shared.save(CatProfile(draft: finalDraft))
+              window.rootViewController = MainTabBarController()
               UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
             }
             navigationController?.pushViewController(step4, animated: true)
