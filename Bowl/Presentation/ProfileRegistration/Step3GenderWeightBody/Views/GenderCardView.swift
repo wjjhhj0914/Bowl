@@ -28,12 +28,23 @@ final class GenderCardView: ProfileCardView {
     /// Emits when the user taps a gender option.
     var selectedGender: Observable<CatGender> { selectionRelay.asObservable() }
 
+    private var hasStyledOnce = false
+
     override init() {
         super.init()
         setupLayout()
         femaleButton.addTarget(self, action: #selector(didTapFemale), for: .touchUpInside)
         maleButton.addTarget(self, action: #selector(didTapMale), for: .touchUpInside)
+
+        // Tactile press feedback on both options.
+        [femaleButton, maleButton].forEach { button in
+            button.addTarget(self, action: #selector(pressDown(_:)), for: .touchDown)
+            button.addTarget(self, action: #selector(pressUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        }
     }
+
+    @objc private func pressDown(_ sender: UIView) { sender.animatePressDown() }
+    @objc private func pressUp(_ sender: UIView) { sender.animatePressUp() }
 
     private static func makeOptionButton(title: String) -> UIButton {
         let button = UIButton(type: .custom)
@@ -66,15 +77,27 @@ final class GenderCardView: ProfileCardView {
         }
     }
 
-    /// Updates the visual selection state.
+    /// Updates the visual selection state, gliding the colors between choices.
     func setSelected(_ gender: CatGender) {
-        style(femaleButton, isSelected: gender == .female)
-        style(maleButton, isSelected: gender == .male)
+        // First paint (on load) is instant; later changes animate.
+        let animated = hasStyledOnce
+        hasStyledOnce = true
+        style(femaleButton, isSelected: gender == .female, animated: animated)
+        style(maleButton, isSelected: gender == .male, animated: animated)
     }
 
-    private func style(_ button: UIButton, isSelected: Bool) {
-        button.backgroundColor = isSelected ? AppColor.primary : AppColor.inputBackground
-        button.setTitleColor(isSelected ? AppColor.onPrimary : AppColor.textSecondary, for: .normal)
+    private func style(_ button: UIButton, isSelected: Bool, animated: Bool) {
+        // Cross-dissolve so both the background and the (otherwise
+        // non-animatable) title color fade smoothly.
+        let apply = {
+            button.backgroundColor = isSelected ? AppColor.primary : AppColor.inputBackground
+            button.setTitleColor(isSelected ? AppColor.onPrimary : AppColor.textSecondary, for: .normal)
+        }
+        if animated {
+            UIView.transition(with: button, duration: 0.22, options: .transitionCrossDissolve, animations: apply)
+        } else {
+            apply()
+        }
     }
 
     @objc private func didTapFemale() { selectionRelay.accept(.female) }
