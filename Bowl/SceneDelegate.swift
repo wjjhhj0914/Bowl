@@ -37,9 +37,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             let step4 = ProfileActivityHealthViewController(
               viewModel: ProfileActivityHealthViewModel(draft: draft3)
             )
-            step4.onComplete = { finalDraft in
-              // TODO: Persist the profile and route to the home dashboard.
-              print("Profile complete → name: \(finalDraft.name), activity: \(String(describing: finalDraft.activityLevel)), concerns: \(finalDraft.healthConcerns), allergy: \(finalDraft.hasAllergy)")
+            step4.onComplete = { [weak window] finalDraft in
+              // Profile registration finished → enter the main app (home dashboard).
+              guard let window else { return }
+              let mainTab = MainTabBarController(profile: finalDraft)
+              window.rootViewController = mainTab
+              UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: nil)
             }
             navigationController?.pushViewController(step4, animated: true)
           }

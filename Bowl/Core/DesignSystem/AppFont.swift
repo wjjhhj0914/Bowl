@@ -84,4 +84,25 @@ enum AppFont {
 
     /// Larger option-card title (e.g. 활동량 options). Figma: SF Pro Bold 14.
     static let optionTitleLarge = UIFont.systemFont(ofSize: 14, weight: .bold)
+
+    /// Screen title in a header (e.g. "홈"). Figma: SF Pro Bold 22.
+    static let screenTitle = UIFont.systemFont(ofSize: 22, weight: .bold)
+
+    /// Emphasized card value / name. Figma: SF Pro Bold 18.
+    static let cardValue = UIFont.systemFont(ofSize: 18, weight: .bold)
+
+    /// Bold body text (e.g. product name). Figma: SF Pro Bold 16.
+    static let bodyBold = UIFont.systemFont(ofSize: 16, weight: .bold)
+
+    /// Bold 14 subtitle (e.g. profile card subtitle). Figma: SF Pro Bold 14.
+    static let subtitleBold = UIFont.systemFont(ofSize: 14, weight: .bold)
+
+    /// Medium 12 caption (e.g. brand name). Figma: SF Pro Medium 12.
+    static let captionMedium = UIFont.systemFont(ofSize: 12, weight: .medium)
+
+    /// Medium 14 inline link (e.g. "상세"). Figma: SF Pro Medium 14.
+    static let linkMedium = UIFont.systemFont(ofSize: 14, weight: .medium)
+
+    /// Tiny bold tag (e.g. "건식", "조단백 32%"). Figma: SF Pro Bold 10.
+    static let tag = UIFont.systemFont(ofSize: 10, weight: .bold)
 }

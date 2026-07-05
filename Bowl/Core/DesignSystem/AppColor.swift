@@ -93,4 +93,14 @@ enum AppColor {
 
     /// "선택사항" optional badge background. Figma: `#EAEAEF`
     static let badgeBackground = UIColor(hex: "#EAEAEF")
+
+    /// Home profile-card gradient. Figma: `#D1E2FF` → `#A8CAF9`
+    static let profileCardGradientStart = UIColor(hex: "#D1E2FF")
+    static let profileCardGradientEnd = UIColor(hex: "#A8CAF9")
+
+    /// Muted subtitle on the home profile card. Figma: `#7A7A86`
+    static let profileCardSubtitle = UIColor(hex: "#7A7A86")
+
+    /// Home header hairline. Figma: `#E7E8EB`
+    static let headerDivider = UIColor(hex: "#E7E8EB")
 }
