@@ -139,5 +139,24 @@ final class BreedPickerViewController: BottomSheetViewController {
                 owner.dismiss(animated: true)
             }
             .disposed(by: disposeBag)
+
+        // Forwarding delegate (coexists with the Rx data source) for willDisplay.
+        tableView.rx.setDelegate(self).disposed(by: disposeBag)
+    }
+}
+
+// MARK: - UITableViewDelegate
+
+extension BreedPickerViewController: UITableViewDelegate {
+
+    func tableView(_ tableView: UITableView, willDisplay cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        let isLastRow = indexPath.row == tableView.numberOfRows(inSection: indexPath.section) - 1
+        if isLastRow {
+            // Push the final separator completely off-screen.
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        } else {
+            // Symmetric 24pt inset on both sides.
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 24, bottom: 0, right: 24)
+        }
     }
 }

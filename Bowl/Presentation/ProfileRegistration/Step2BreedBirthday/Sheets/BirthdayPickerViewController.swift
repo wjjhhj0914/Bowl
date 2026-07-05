@@ -183,6 +183,32 @@ final class BirthdayPickerViewController: BottomSheetViewController {
         return calendar.date(from: comps) ?? Date()
     }
 
+    /// A cat can't be born in the future: if the scrolled date is later than
+    /// today, smoothly roll the wheels back to today. Returns whether it did.
+    @discardableResult
+    private func clampFutureDateIfNeeded() -> Bool {
+        let now = Date()
+        guard selectedDate() > now else { return false }
+
+        let today = calendar.dateComponents([.year, .month, .day], from: now)
+        guard let targetYear = today.year,
+              let targetMonth = today.month,
+              let targetDay = today.day,
+              let yearIndex = years.firstIndex(of: targetYear) else { return false }
+
+        pickerView.selectRow(yearIndex, inComponent: 0, animated: true)
+        pickerView.selectRow(targetMonth - 1, inComponent: 1, animated: true)
+
+        // Ensure the day wheel matches today's month before selecting the day.
+        let dayCount = numberOfDays(year: targetYear, month: targetMonth)
+        if days.count != dayCount {
+            days = Array(1...dayCount)
+            pickerView.reloadComponent(2)
+        }
+        pickerView.selectRow(targetDay - 1, inComponent: 2, animated: true)
+        return true
+    }
+
     // MARK: - Row styling
 
     private func value(component: Int, row: Int) -> Int {
@@ -254,6 +280,15 @@ extension BirthdayPickerViewController: UIPickerViewDelegate {
         if component == 0 || component == 1 {
             rebuildDaysIfNeeded()
         }
-        repaintSelection()
+
+        if clampFutureDateIfNeeded() {
+            // Repaint colors once the animated roll-back has settled, so the
+            // reload doesn't cut the animation short.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.repaintSelection()
+            }
+        } else {
+            repaintSelection()
+        }
     }
 }
