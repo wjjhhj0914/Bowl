@@ -116,7 +116,14 @@ final class BreedPickerViewController: BottomSheetViewController {
             .map { [allBreeds] query in
                 let trimmed = query.trimmingCharacters(in: .whitespaces)
                 guard !trimmed.isEmpty else { return allBreeds }
-                return allBreeds.filter { $0.localizedCaseInsensitiveContains(trimmed) }
+
+                if trimmed.isChosungOnly {
+                    // Consonant-only query → match against each breed's chosung.
+                    return allBreeds.filter { $0.toChosung().contains(trimmed) }
+                } else {
+                    // Complete characters → standard substring match.
+                    return allBreeds.filter { $0.localizedCaseInsensitiveContains(trimmed) }
+                }
             }
             .bind(to: filteredBreeds)
             .disposed(by: disposeBag)
