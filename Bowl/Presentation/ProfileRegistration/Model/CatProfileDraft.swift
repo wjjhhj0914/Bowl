@@ -26,6 +26,7 @@ struct CatProfileDraft {
     var activityLevel: CatActivityLevel?
     var healthConcerns: Set<String>
     var hasAllergy: Bool
+    var allergens: Set<String>
 
     init(photo: UIImage? = nil,
          name: String = "",
@@ -36,7 +37,8 @@ struct CatProfileDraft {
          bodyType: CatBodyType? = nil,
          activityLevel: CatActivityLevel? = nil,
          healthConcerns: Set<String> = [],
-         hasAllergy: Bool = false) {
+         hasAllergy: Bool = false,
+         allergens: Set<String> = []) {
         self.photo = photo
         self.name = name
         self.breed = breed
@@ -47,5 +49,6 @@ struct CatProfileDraft {
         self.activityLevel = activityLevel
         self.healthConcerns = healthConcerns
         self.hasAllergy = hasAllergy
+        self.allergens = allergens
     }
 }

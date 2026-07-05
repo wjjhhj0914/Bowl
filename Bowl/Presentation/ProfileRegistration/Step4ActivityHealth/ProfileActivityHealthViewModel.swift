@@ -17,6 +17,7 @@ final class ProfileActivityHealthViewModel: ViewModelType {
         let activitySelected: Observable<CatActivityLevel>
         let healthConcernToggled: Observable<String>
         let allergyToggled: Observable<Bool>
+        let allergenToggled: Observable<String>
         let doneTapped: Observable<Void>
     }
 
@@ -24,6 +25,7 @@ final class ProfileActivityHealthViewModel: ViewModelType {
         let activity: Driver<CatActivityLevel>
         let healthConcerns: Driver<Set<String>>
         let hasAllergy: Driver<Bool>
+        let allergens: Driver<Set<String>>
         /// Emits the finished profile when the user taps "완료".
         let didComplete: Driver<CatProfileDraft>
     }
@@ -32,6 +34,7 @@ final class ProfileActivityHealthViewModel: ViewModelType {
     private let activityRelay: BehaviorRelay<CatActivityLevel>
     private let healthRelay: BehaviorRelay<Set<String>>
     private let allergyRelay: BehaviorRelay<Bool>
+    private let allergensRelay: BehaviorRelay<Set<String>>
     private let disposeBag = DisposeBag()
 
     init(draft: CatProfileDraft) {
@@ -39,6 +42,7 @@ final class ProfileActivityHealthViewModel: ViewModelType {
         activityRelay = BehaviorRelay(value: draft.activityLevel ?? .medium)
         healthRelay = BehaviorRelay(value: draft.healthConcerns)
         allergyRelay = BehaviorRelay(value: draft.hasAllergy)
+        allergensRelay = BehaviorRelay(value: draft.allergens)
     }
 
     func transform(input: Input) -> Output {
@@ -48,6 +52,23 @@ final class ProfileActivityHealthViewModel: ViewModelType {
 
         input.allergyToggled
             .bind(to: allergyRelay)
+            .disposed(by: disposeBag)
+
+        // Turning the allergy switch off clears any chosen allergens.
+        input.allergyToggled
+            .filter { !$0 }
+            .map { _ in Set<String>() }
+            .bind(to: allergensRelay)
+            .disposed(by: disposeBag)
+
+        // Toggle an allergen in/out of the set.
+        input.allergenToggled
+            .withLatestFrom(allergensRelay) { allergen, current in
+                var set = current
+                if set.contains(allergen) { set.remove(allergen) } else { set.insert(allergen) }
+                return set
+            }
+            .bind(to: allergensRelay)
             .disposed(by: disposeBag)
 
         // Toggle a concern in/out of the set. "없음" is mutually exclusive with
@@ -60,12 +81,13 @@ final class ProfileActivityHealthViewModel: ViewModelType {
             .disposed(by: disposeBag)
 
         let didComplete = input.doneTapped
-            .withLatestFrom(Observable.combineLatest(activityRelay, healthRelay, allergyRelay))
-            .map { [initialDraft] activity, concerns, hasAllergy -> CatProfileDraft in
+            .withLatestFrom(Observable.combineLatest(activityRelay, healthRelay, allergyRelay, allergensRelay))
+            .map { [initialDraft] activity, concerns, hasAllergy, allergens -> CatProfileDraft in
                 var draft = initialDraft
                 draft.activityLevel = activity
                 draft.healthConcerns = concerns
                 draft.hasAllergy = hasAllergy
+                draft.allergens = allergens
                 return draft
             }
             .asDriver(onErrorDriveWith: .empty())
@@ -74,6 +96,7 @@ final class ProfileActivityHealthViewModel: ViewModelType {
             activity: activityRelay.asDriver(),
             healthConcerns: healthRelay.asDriver(),
             hasAllergy: allergyRelay.asDriver(),
+            allergens: allergensRelay.asDriver(),
             didComplete: didComplete
         )
     }

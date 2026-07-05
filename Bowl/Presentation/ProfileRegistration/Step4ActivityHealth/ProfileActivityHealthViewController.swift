@@ -22,6 +22,8 @@ final class ProfileActivityHealthViewController: BaseViewController {
     /// Invoked when the whole profile registration completes.
     var onComplete: ((CatProfileDraft) -> Void)?
 
+    private var didApplyAllergyState = false
+
     // MARK: - UI
 
     private let navigationBar = StepProgressNavigationBar(
@@ -114,6 +116,7 @@ final class ProfileActivityHealthViewController: BaseViewController {
             activitySelected: activityCard.selectedActivity,
             healthConcernToggled: healthCard.toggledConcern,
             allergyToggled: allergyCard.allergyChanged,
+            allergenToggled: allergyCard.toggledAllergen,
             doneTapped: doneButton.rx.tap.asObservable()
         )
         let output = viewModel.transform(input: input)
@@ -133,6 +136,13 @@ final class ProfileActivityHealthViewController: BaseViewController {
         output.hasAllergy
             .drive(with: self) { owner, isOn in
                 owner.allergyCard.setOn(isOn)
+                owner.updateAllergySelection(visible: isOn)
+            }
+            .disposed(by: disposeBag)
+
+        output.allergens
+            .drive(with: self) { owner, allergens in
+                owner.allergyCard.setSelectedAllergens(allergens)
             }
             .disposed(by: disposeBag)
 
@@ -147,5 +157,20 @@ final class ProfileActivityHealthViewController: BaseViewController {
                 owner.navigationController?.popViewController(animated: true)
             }
             .disposed(by: disposeBag)
+    }
+
+    /// Reveals/hides the allergen grid, animating the card and scroll content.
+    /// The first application (initial state) is instant so nothing animates on load.
+    private func updateAllergySelection(visible: Bool) {
+        guard didApplyAllergyState else {
+            didApplyAllergyState = true
+            allergyCard.setSelectionHidden(!visible)
+            return
+        }
+        UIView.animate(withDuration: 0.3) {
+            self.allergyCard.setSelectionHidden(!visible)
+            // Lay out the whole hierarchy so the card + scroll content grow smoothly.
+            self.view.layoutIfNeeded()
+        }
     }
 }
