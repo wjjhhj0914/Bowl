@@ -28,6 +28,8 @@ final class BodyTypeOptionCard: UIControl {
         return label
     }()
 
+    private var hasStyledOnce = false
+
     init(bodyType: CatBodyType) {
         self.bodyType = bodyType
         super.init(frame: .zero)
@@ -36,10 +38,17 @@ final class BodyTypeOptionCard: UIControl {
         subtitleLabel.text = bodyType.subtitle
         setupLayout()
         setSelected(false)
+
+        // Tactile press feedback.
+        addTarget(self, action: #selector(pressDown), for: .touchDown)
+        addTarget(self, action: #selector(pressUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    @objc private func pressDown() { animatePressDown() }
+    @objc private func pressUp() { animatePressUp() }
 
     override var intrinsicContentSize: CGSize {
         CGSize(width: UIView.noIntrinsicMetric, height: 70)
@@ -63,8 +72,18 @@ final class BodyTypeOptionCard: UIControl {
     }
 
     func setSelected(_ isSelected: Bool) {
-        backgroundColor = isSelected ? AppColor.primary : AppColor.inputBackground
-        titleLabel.textColor = isSelected ? AppColor.onPrimary : AppColor.textSecondary
-        subtitleLabel.textColor = isSelected ? AppColor.onPrimarySubtext : AppColor.textTertiary
+        // Cross-dissolve so the background and text colors glide between states.
+        let apply = {
+            self.backgroundColor = isSelected ? AppColor.primary : AppColor.inputBackground
+            self.titleLabel.textColor = isSelected ? AppColor.onPrimary : AppColor.textSecondary
+            self.subtitleLabel.textColor = isSelected ? AppColor.onPrimarySubtext : AppColor.textTertiary
+        }
+        // First paint (on load) is instant; later changes animate.
+        if hasStyledOnce {
+            UIView.transition(with: self, duration: 0.22, options: .transitionCrossDissolve, animations: apply)
+        } else {
+            apply()
+        }
+        hasStyledOnce = true
     }
 }
