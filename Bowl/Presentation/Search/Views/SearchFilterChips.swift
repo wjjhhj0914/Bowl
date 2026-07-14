@@ -64,11 +64,21 @@ final class ActiveFilterChipView: UIControl {
 /// The trailing gray "필터" button that opens the filter sheet.
 final class FilterButton: UIControl {
 
+    private let iconView: UIImageView = {
+        let config = UIImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+        let view = UIImageView(image: UIImage(systemName: "slider.horizontal.3", withConfiguration: config))
+        // Match the navigation-bar button tint (see HomeHeaderView).
+        view.tintColor = AppColor.textPrimary
+        view.contentMode = .center
+        view.isUserInteractionEnabled = false
+        return view
+    }()
+
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.text = "필터"
         label.font = AppFont.chipLabel
-        label.textColor = AppColor.textSecondary
+        label.textColor = AppColor.textPrimary
         label.isUserInteractionEnabled = false
         return label
     }()
@@ -80,10 +90,15 @@ final class FilterButton: UIControl {
         layer.borderWidth = 1
         layer.borderColor = AppColor.divider.cgColor
 
-        addSubview(titleLabel)
-        titleLabel.snp.makeConstraints { make in
-            make.leading.equalToSuperview().offset(16)
-            make.trailing.equalToSuperview().offset(-16)
+        let stack = UIStackView(arrangedSubviews: [iconView, titleLabel])
+        stack.axis = .horizontal
+        stack.alignment = .center
+        stack.spacing = 5
+        stack.isUserInteractionEnabled = false
+        addSubview(stack)
+        stack.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(14)
+            make.trailing.equalToSuperview().offset(-14)
             make.centerY.equalToSuperview()
         }
         snp.makeConstraints { $0.height.equalTo(28) }
