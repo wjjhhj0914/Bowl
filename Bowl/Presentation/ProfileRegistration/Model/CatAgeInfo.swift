@@ -21,7 +21,7 @@ struct CatAgeInfo {
 
         switch years {
         case 0:
-            stage = "자묘"
+            stage = "아깽이"
         case 1...6:
             stage = "성묘"
         default:

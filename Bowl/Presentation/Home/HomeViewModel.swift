@@ -16,16 +16,13 @@ struct HomeDisplay {
     let subtitle: String
     let calorie: String
     let water: String
-    let foodBrand: String
-    let foodProduct: String
-    let foodType: String
-    let foodProtein: String
 }
 
 enum HomeRoute {
     case settings
     case foodDetail
     case editProfile
+    case registerFood
     case quickAction(HomeQuickAction)
 }
 
@@ -35,18 +32,24 @@ final class HomeViewModel: ViewModelType {
         let settingsTapped: Observable<Void>
         let profileTapped: Observable<Void>
         let foodDetailTapped: Observable<Void>
+        let registerFoodTapped: Observable<Void>
         let quickActionTapped: Observable<HomeQuickAction>
     }
 
     struct Output {
         let display: Driver<HomeDisplay>
+        /// nil → show the empty state; non-nil → show the food card.
+        let currentFood: Driver<Food?>
         let route: Driver<HomeRoute>
     }
 
     private let storage: ProfileStoring
+    /// The food the cat is currently being fed (nil until one is registered).
+    private let currentFood: BehaviorRelay<Food?>
 
-    init(storage: ProfileStoring = UserDefaultsProfileStorage.shared) {
+    init(storage: ProfileStoring = UserDefaultsProfileStorage.shared, currentFood: Food? = nil) {
         self.storage = storage
+        self.currentFood = BehaviorRelay(value: currentFood)
     }
 
     func transform(input: Input) -> Output {
@@ -57,11 +60,16 @@ final class HomeViewModel: ViewModelType {
                 input.settingsTapped.map { HomeRoute.settings },
                 input.profileTapped.map { HomeRoute.editProfile },
                 input.foodDetailTapped.map { HomeRoute.foodDetail },
+                input.registerFoodTapped.map { HomeRoute.registerFood },
                 input.quickActionTapped.map { HomeRoute.quickAction($0) }
             )
             .asDriver(onErrorDriveWith: .empty())
 
-        return Output(display: display, route: route)
+        return Output(
+            display: display,
+            currentFood: currentFood.asDriver(),
+            route: route
+        )
     }
 
     // MARK: - Derivation
@@ -77,24 +85,42 @@ final class HomeViewModel: ViewModelType {
         return HomeDisplay(
             name: name,
             subtitle: "\(stage) · \(Self.formatWeight(weight))kg",
-            calorie: "\(Self.recommendedCalorie(weight))kcal",
-            water: "\(Self.recommendedWater(weight))ml",
-            // Demo data until food records are implemented.
-            foodBrand: "로얄캐닌",
-            foodProduct: "인도어 어덜트",
-            foodType: "건식",
-            foodProtein: "조단백 32%"
+            calorie: "\(Self.recommendedCalorie(weight: weight, birthday: profile?.birthday))kcal",
+            water: "\(Self.recommendedWater(weight))ml"
         )
     }
 
-    /// Maintenance energy: RER (70·kg^0.75) × 1.15 (neutered indoor factor).
-    private static func recommendedCalorie(_ weight: Double) -> Int {
-        Int((70 * pow(weight, 0.75) * 1.15).rounded())
+    /// Daily Energy Requirement (DER) = RER × life-stage factor.
+    /// RER = 70 · kg^0.75.
+    private static func recommendedCalorie(weight: Double, birthday: Date?) -> Int {
+        let rer = 70.0 * pow(weight, 0.75)
+        return Int(rer * energyFactor(birthday: birthday))
     }
 
-    /// Daily water need ≈ 44.4 ml per kg.
+    /// Multiplying factor by life stage:
+    ///   자묘 < 4개월 → 3.0, 자묘 4~12개월 → 2.0,
+    ///   성묘 중성화 → 1.2, 성묘 미중성화 → 1.4.
+    private static func energyFactor(birthday: Date?) -> Double {
+        // Neutered status isn't collected in the profile yet — assume neutered
+        // (the common case) for adults. Add a profile field to refine this.
+        let isNeutered = true
+
+        guard let birthday else { return isNeutered ? 1.2 : 1.4 }
+        let months = Calendar.current.dateComponents([.month], from: birthday, to: Date()).month ?? 12
+
+        switch months {
+        case ..<4:
+            return 3.0
+        case 4..<12:
+            return 2.0
+        default:
+            return isNeutered ? 1.2 : 1.4
+        }
+    }
+
+    /// Daily water target ≈ 55 ml per kg.
     private static func recommendedWater(_ weight: Double) -> Int {
-        Int((weight * 44.4).rounded())
+        Int(weight * 55.0)
     }
 
     private static func formatWeight(_ weight: Double) -> String {

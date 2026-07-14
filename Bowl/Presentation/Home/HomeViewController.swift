@@ -38,6 +38,15 @@ final class HomeViewController: BaseViewController {
 
     private let foodSectionTitle = HomeViewController.makeSectionTitle("현재 급여 중인 사료")
     private let foodCard = CurrentFoodCardView()
+    private let emptyFoodView = EmptyFoodStateView()
+
+    /// Holds the food card and the empty state; only one is visible at a time,
+    /// so the stack sizes to whichever is shown.
+    private lazy var foodContainer: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [foodCard, emptyFoodView])
+        stack.axis = .vertical
+        return stack
+    }()
 
     private let quickSectionTitle = HomeViewController.makeSectionTitle("빠른 실행")
     private let quickActionCards = HomeQuickAction.allCases.map { QuickActionCardView(action: $0) }
@@ -58,7 +67,7 @@ final class HomeViewController: BaseViewController {
         view.addSubview(scrollView)
         view.addSubview(headerView)
         scrollView.addSubview(contentView)
-        [profileCard, foodSectionTitle, foodCard, quickSectionTitle, quickActionGrid()].forEach { contentView.addSubview($0) }
+        [profileCard, foodSectionTitle, foodContainer, quickSectionTitle, quickActionGrid()].forEach { contentView.addSubview($0) }
 
         // Tapping the profile card opens profile editing.
         profileCard.isUserInteractionEnabled = true
@@ -114,13 +123,13 @@ final class HomeViewController: BaseViewController {
             make.top.equalTo(profileCard.snp.bottom).offset(30)
             make.leading.equalToSuperview().offset(24)
         }
-        foodCard.snp.makeConstraints { make in
+        foodContainer.snp.makeConstraints { make in
             make.top.equalTo(foodSectionTitle.snp.bottom).offset(12)
             make.leading.equalToSuperview().offset(16)
             make.trailing.equalToSuperview().offset(-16)
         }
         quickSectionTitle.snp.makeConstraints { make in
-            make.top.equalTo(foodCard.snp.bottom).offset(30)
+            make.top.equalTo(foodContainer.snp.bottom).offset(30)
             make.leading.equalToSuperview().offset(24)
         }
         grid.snp.makeConstraints { make in
@@ -144,6 +153,7 @@ final class HomeViewController: BaseViewController {
             settingsTapped: headerView.settingsButton.rx.tap.asObservable(),
             profileTapped: profileTapRelay.asObservable(),
             foodDetailTapped: foodCard.detailButton.rx.tap.asObservable(),
+            registerFoodTapped: emptyFoodView.rx.controlEvent(.touchUpInside).map { () }.asObservable(),
             quickActionTapped: quickActionTapped
         )
         let output = viewModel.transform(input: input)
@@ -156,12 +166,22 @@ final class HomeViewController: BaseViewController {
                     calorie: display.calorie,
                     water: display.water
                 )
-                owner.foodCard.configure(
-                    brand: display.foodBrand,
-                    product: display.foodProduct,
-                    type: display.foodType,
-                    protein: display.foodProtein
-                )
+            }
+            .disposed(by: disposeBag)
+
+        // Swap between the food card and the empty state.
+        output.currentFood
+            .drive(with: self) { owner, food in
+                owner.foodCard.isHidden = food == nil
+                owner.emptyFoodView.isHidden = food != nil
+                if let food {
+                    owner.foodCard.configure(
+                        brand: food.brand,
+                        product: food.product,
+                        type: food.type,
+                        protein: food.proteinText
+                    )
+                }
             }
             .disposed(by: disposeBag)
 
@@ -171,6 +191,9 @@ final class HomeViewController: BaseViewController {
                 case .editProfile:
                     // Home is embedded in a navigation controller — push cleanly.
                     owner.navigationController?.pushViewController(ProfileEditViewController(), animated: true)
+                case .registerFood:
+                    // Guide the user to the search tab to register their first food.
+                    owner.tabBarController?.selectedIndex = 1
                 default:
                     owner.onRoute?(route)
                 }
