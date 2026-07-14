@@ -37,16 +37,22 @@ final class SearchViewModel: ViewModelType {
         let results: Driver<[FoodResult]>
         let resultCount: Driver<Int>
         let activeFilters: Driver<[String]>
+        /// Profile-based picks shown in the empty state (static per session).
+        let recommendations: Driver<[Food]>
         let route: Driver<SearchRoute>
     }
 
     private let allFoods: [Food]
     private let activeFilters: BehaviorRelay<[String]>
     private let savedIDs = BehaviorRelay<Set<String>>(value: [])
+    private let storage: ProfileStoring
 
-    init(foods: [Food] = FoodCatalog.all, activeFilters: [String] = []) {
+    init(foods: [Food] = FoodCatalog.all,
+         activeFilters: [String] = [],
+         storage: ProfileStoring = UserDefaultsProfileStorage.shared) {
         self.allFoods = foods
         self.activeFilters = BehaviorRelay(value: activeFilters)
+        self.storage = storage
     }
 
     func transform(input: Input) -> Output {
@@ -102,10 +108,15 @@ final class SearchViewModel: ViewModelType {
             )
             .asDriver(onErrorDriveWith: .empty())
 
+        let recommendations = Driver.just(
+            FoodRecommender.recommendations(for: storage.load(), from: allFoods)
+        )
+
         return Output(
             results: results,
             resultCount: resultCount,
             activeFilters: activeFilters.asDriver(),
+            recommendations: recommendations,
             route: route
         )
     }

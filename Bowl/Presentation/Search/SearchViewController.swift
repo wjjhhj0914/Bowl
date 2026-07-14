@@ -109,14 +109,67 @@ final class SearchViewController: BaseViewController {
         return table
     }()
 
+    // MARK: - Empty state
+
+    private let emptyStateView: UIView = {
+        let view = UIView()
+        view.isHidden = true
+        return view
+    }()
+
     private let emptyLabel: UILabel = {
         let label = UILabel()
         label.text = "검색 결과가 없어요"
         label.font = AppFont.bodyBold
         label.textColor = AppColor.textTertiary
         label.textAlignment = .center
-        label.isHidden = true
         return label
+    }()
+
+    private let resetFiltersButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.title = "필터 초기화"
+        config.image = UIImage(systemName: "arrow.counterclockwise",
+                               withConfiguration: UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold))
+        config.imagePadding = 6
+        config.baseForegroundColor = AppColor.textSecondary
+        config.cornerStyle = .capsule
+        config.background.backgroundColor = AppColor.inputBackground
+        config.background.strokeColor = AppColor.divider
+        config.background.strokeWidth = 1
+        config.contentInsets = NSDirectionalEdgeInsets(top: 9, leading: 18, bottom: 9, trailing: 18)
+        var title = AttributeContainer()
+        title.font = AppFont.subtitleBold
+        config.attributedTitle = AttributedString("필터 초기화", attributes: title)
+
+        let button = UIButton(configuration: config)
+        button.isHidden = true
+        return button
+    }()
+
+    private let recommendationTitle: UILabel = {
+        let label = UILabel()
+        label.text = "우리 아이 맞춤 사료는 어때요?"
+        label.font = AppFont.cardTitle
+        label.textColor = AppColor.textSecondary
+        return label
+    }()
+
+    private lazy var recommendationCollectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        layout.itemSize = CGSize(width: 260, height: 96)
+        layout.minimumLineSpacing = 12
+        // First card lines up with the section title; scrolled cards glide to
+        // the screen edges.
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+
+        let collection = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collection.backgroundColor = .clear
+        collection.showsHorizontalScrollIndicator = false
+        collection.clipsToBounds = false // let card shadows breathe
+        collection.register(RecommendationCell.self, forCellWithReuseIdentifier: RecommendationCell.reuseID)
+        return collection
     }()
 
     // MARK: - Init
@@ -131,10 +184,21 @@ final class SearchViewController: BaseViewController {
 
     // MARK: - Setup
 
+    /// Empty-state title + reset button, stacked and centered so the reset
+    /// button collapses cleanly when there are no filters to clear.
+    private lazy var emptyTopStack: UIStackView = {
+        let stack = UIStackView(arrangedSubviews: [emptyLabel, resetFiltersButton])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = 16
+        return stack
+    }()
+
     override func setupHierarchy() {
         view.addSubview(tableView)
         view.addSubview(countLabel)
-        view.addSubview(emptyLabel)
+        view.addSubview(emptyStateView)
+        [emptyTopStack, recommendationTitle, recommendationCollectionView].forEach { emptyStateView.addSubview($0) }
         view.addSubview(headerView)
         [titleLabel, searchField, filterScrollView, headerDivider].forEach { headerView.addSubview($0) }
         filterScrollView.addSubview(filterStack)
@@ -179,9 +243,28 @@ final class SearchViewController: BaseViewController {
             make.top.equalTo(countLabel.snp.bottom).offset(8)
             make.leading.trailing.bottom.equalToSuperview()
         }
-        emptyLabel.snp.makeConstraints { make in
+
+        emptyStateView.snp.makeConstraints { make in
+            make.top.equalTo(countLabel.snp.bottom).offset(8)
+            make.leading.trailing.bottom.equalToSuperview()
+        }
+        emptyTopStack.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(48)
+            make.leading.greaterThanOrEqualToSuperview().offset(24)
+            make.trailing.lessThanOrEqualToSuperview().offset(-24)
             make.centerX.equalToSuperview()
-            make.top.equalTo(tableView).offset(80)
+        }
+        recommendationTitle.snp.makeConstraints { make in
+            make.top.equalTo(emptyTopStack.snp.bottom).offset(40)
+            // Aligns with the first card's left edge (sectionInset.left).
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.lessThanOrEqualToSuperview().offset(-20)
+        }
+        recommendationCollectionView.snp.makeConstraints { make in
+            make.top.equalTo(recommendationTitle.snp.bottom).offset(16)
+            make.leading.trailing.equalToSuperview()
+            // A touch over the 96pt card so the soft shadow isn't clipped.
+            make.height.equalTo(104)
         }
     }
 
@@ -194,7 +277,10 @@ final class SearchViewController: BaseViewController {
             applyFilters: applyFiltersRelay.asObservable(),
             filterTapped: filterButton.rx.controlEvent(.touchUpInside).map { () }.asObservable(),
             bookmarkTapped: bookmarkRelay.asObservable(),
-            foodSelected: tableView.rx.modelSelected(FoodResult.self).map { $0.food }.asObservable()
+            foodSelected: Observable.merge(
+                tableView.rx.modelSelected(FoodResult.self).map { $0.food },
+                recommendationCollectionView.rx.modelSelected(Food.self).asObservable()
+            )
         )
         let output = viewModel.transform(input: input)
 
@@ -205,9 +291,30 @@ final class SearchViewController: BaseViewController {
             }
             .disposed(by: disposeBag)
 
+        // Swap the list for the recovery empty state when there are no results.
         output.results
             .map { !$0.isEmpty }
-            .drive(emptyLabel.rx.isHidden)
+            .drive(emptyStateView.rx.isHidden)
+            .disposed(by: disposeBag)
+
+        output.results
+            .map { $0.isEmpty }
+            .drive(tableView.rx.isHidden)
+            .disposed(by: disposeBag)
+
+        output.recommendations
+            .drive(recommendationCollectionView.rx.items(
+                cellIdentifier: RecommendationCell.reuseID,
+                cellType: RecommendationCell.self
+            )) { _, food, cell in
+                cell.configure(with: food)
+            }
+            .disposed(by: disposeBag)
+
+        // "필터 초기화" clears every active filter and reloads the full list.
+        resetFiltersButton.rx.tap
+            .map { [] }
+            .bind(to: applyFiltersRelay)
             .disposed(by: disposeBag)
 
         output.resultCount
@@ -220,6 +327,8 @@ final class SearchViewController: BaseViewController {
                 owner.currentFilters = filters
                 owner.rebuildFilterChips(filters)
                 owner.filterButton.isActive = !filters.isEmpty
+                // Only offer "필터 초기화" when there's actually a filter to clear.
+                owner.resetFiltersButton.isHidden = filters.isEmpty
             }
             .disposed(by: disposeBag)
 
