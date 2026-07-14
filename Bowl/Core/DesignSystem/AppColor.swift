@@ -103,4 +103,10 @@ enum AppColor {
 
     /// Home header hairline. Figma: `#E7E8EB`
     static let headerDivider = UIColor(hex: "#E7E8EB")
+
+    /// Accent orange — fat (조지방) value on the search result card. Figma: `#FF9230`
+    static let accentOrange = UIColor(hex: "#FF9230")
+
+    /// Neutral tag-chip background on result cards (건식/그레인프리 …). Figma: `#F8F9FA`
+    static let neutralTagBackground = UIColor(hex: "#F8F9FA")
 }
