@@ -83,12 +83,18 @@ final class FilterButton: UIControl {
         return label
     }()
 
+    /// Highlights the button while the sheet is open or filters are applied.
+    var isActive = false {
+        didSet {
+            guard oldValue != isActive else { return }
+            updateStyle(animated: true)
+        }
+    }
+
     init() {
         super.init(frame: .zero)
-        backgroundColor = AppColor.badgeBackground
         layer.cornerRadius = 14
         layer.borderWidth = 1
-        layer.borderColor = AppColor.divider.cgColor
 
         let stack = UIStackView(arrangedSubviews: [iconView, titleLabel])
         stack.axis = .horizontal
@@ -102,8 +108,33 @@ final class FilterButton: UIControl {
             make.centerY.equalToSuperview()
         }
         snp.makeConstraints { $0.height.equalTo(28) }
+        updateStyle(animated: false)
+
+        // Global press-scale feedback (see UIView+PressAnimation).
+        addTarget(self, action: #selector(pressDown), for: .touchDown)
+        addTarget(self, action: #selector(pressUp), for: [.touchUpInside, .touchUpOutside, .touchCancel])
     }
 
     @available(*, unavailable)
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    @objc private func pressDown() { animatePressDown() }
+    @objc private func pressUp() { animatePressUp() }
+
+    /// Active → soft-blue fill, blue border, blue icon/text. Inactive → the
+    /// neutral gray pill matching the navigation-bar button theme.
+    private func updateStyle(animated: Bool) {
+        let apply = {
+            self.backgroundColor = self.isActive ? AppColor.chipSelectedBackground : AppColor.badgeBackground
+            self.layer.borderColor = (self.isActive ? AppColor.primary : AppColor.divider).cgColor
+            let accent = self.isActive ? AppColor.primary : AppColor.textPrimary
+            self.iconView.tintColor = accent
+            self.titleLabel.textColor = accent
+        }
+        if animated {
+            UIView.transition(with: self, duration: 0.22, options: .transitionCrossDissolve, animations: apply)
+        } else {
+            apply()
+        }
+    }
 }

@@ -27,6 +27,7 @@ final class SearchViewModel: ViewModelType {
     struct Input {
         let searchText: Observable<String>
         let removeFilter: Observable<String>
+        let applyFilters: Observable<[String]>
         let filterTapped: Observable<Void>
         let bookmarkTapped: Observable<Food>
         let foodSelected: Observable<Food>
@@ -50,6 +51,11 @@ final class SearchViewModel: ViewModelType {
 
     func transform(input: Input) -> Output {
         let query = input.searchText.startWith("")
+
+        // Replace the active filters wholesale when the sheet applies.
+        input.applyFilters
+            .bind(to: activeFilters)
+            .disposed(by: disposeBag)
 
         // Remove a filter chip when its ✕ is tapped.
         input.removeFilter
@@ -127,8 +133,10 @@ final class SearchViewModel: ViewModelType {
         return food.searchableText.contains(trimmed.lowercased())
     }
 
-    /// A food passes when it carries every active filter (AND).
+    /// A food passes when it carries every active filter keyword (AND).
     private static func matchesFilters(_ food: Food, filters: [String]) -> Bool {
-        filters.allSatisfy { food.searchableText.contains($0.lowercased()) }
+        filters.allSatisfy { filter in
+            food.filterKeywords.contains { $0.caseInsensitiveCompare(filter) == .orderedSame }
+        }
     }
 }

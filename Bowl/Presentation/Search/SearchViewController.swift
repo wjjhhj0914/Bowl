@@ -17,7 +17,11 @@ final class SearchViewController: BaseViewController {
     private let viewModel: SearchViewModel
 
     private let removeFilterRelay = PublishRelay<String>()
+    private let applyFiltersRelay = PublishRelay<[String]>()
     private let bookmarkRelay = PublishRelay<Food>()
+
+    /// The filters currently applied, mirrored so the sheet can pre-select them.
+    private var currentFilters: [String] = []
 
     // MARK: - Header
 
@@ -187,6 +191,7 @@ final class SearchViewController: BaseViewController {
         let input = SearchViewModel.Input(
             searchText: searchField.rx.text.orEmpty.asObservable(),
             removeFilter: removeFilterRelay.asObservable(),
+            applyFilters: applyFiltersRelay.asObservable(),
             filterTapped: filterButton.rx.controlEvent(.touchUpInside).map { () }.asObservable(),
             bookmarkTapped: bookmarkRelay.asObservable(),
             foodSelected: tableView.rx.modelSelected(FoodResult.self).map { $0.food }.asObservable()
@@ -212,7 +217,9 @@ final class SearchViewController: BaseViewController {
 
         output.activeFilters
             .drive(with: self) { owner, filters in
+                owner.currentFilters = filters
                 owner.rebuildFilterChips(filters)
+                owner.filterButton.isActive = !filters.isEmpty
             }
             .disposed(by: disposeBag)
 
@@ -246,8 +253,23 @@ final class SearchViewController: BaseViewController {
                 PlaceholderViewController(name: food.product), animated: true
             )
         case .filter:
-            // TODO: Present the filter bottom sheet once designed.
-            break
+            presentFilterSheet()
         }
+    }
+
+    private func presentFilterSheet() {
+        let sheet = FilterBottomSheetViewController(selected: Set(currentFilters))
+        sheet.didApplyFilters
+            .take(1) // one apply per presentation; ties off with the sheet
+            .bind(to: applyFiltersRelay)
+            .disposed(by: sheet.disposeBag)
+        // Keep the pill highlighted while the sheet is open, then reflect the
+        // applied-filter state once it closes.
+        filterButton.isActive = true
+        sheet.onDismiss = { [weak self] in
+            guard let self else { return }
+            self.filterButton.isActive = !self.currentFilters.isEmpty
+        }
+        present(sheet, animated: true)
     }
 }
