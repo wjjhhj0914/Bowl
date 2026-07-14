@@ -27,9 +27,15 @@ final class MainTabBarController: UITabBarController {
         let homeNav = UINavigationController(rootViewController: home)
         homeNav.setNavigationBarHidden(true, animated: false)
 
+        // Search has its own custom header, so hide the nav bar; the nav
+        // controller stays for pushing food detail.
+        let search = SearchViewController(viewModel: SearchViewModel())
+        let searchNav = UINavigationController(rootViewController: search)
+        searchNav.setNavigationBarHidden(true, animated: false)
+
         viewControllers = [
             tab(homeNav, title: "홈", symbol: "house.fill"),
-            tab(PlaceholderViewController(name: "검색"), title: "검색", symbol: "magnifyingglass"),
+            tab(searchNav, title: "검색", symbol: "magnifyingglass"),
             tab(PlaceholderViewController(name: "스캔"), title: "스캔", symbol: "barcode.viewfinder"),
             tab(PlaceholderViewController(name: "기록"), title: "기록", symbol: "list.bullet.clipboard.fill"),
             tab(PlaceholderViewController(name: "마이"), title: "마이", symbol: "person.fill")
